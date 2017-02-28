@@ -282,22 +282,21 @@ class Hessian2Parser{
 	}
 	
 	function readUTF8Bytes($len){
-		$string = $this->read($len);
 		$pos = 0;
 		$pass = 1;
+		$bytesPos = $this->stream->pos; //start position
 		while($pass <= $len){
-			$charCode = ord($string[$pos]);
+			$charCode = ord($this->stream->str{$bytesPos+$pos});
 			if($charCode < 0x80){
 				$pos++;
 			} elseif(($charCode & 0xe0) == 0xc0){
 				$pos += 2;
-				$string .= $this->read(1);
 			} elseif (($charCode & 0xf0) == 0xe0) {
 				$pos += 3;
-				$string .= $this->read(2);
 			}
 			$pass++;
 		}
+		$string = $this->read($pos);
 		
 		if(HessianUtils::isInternalUTF8())
 			return $string;
