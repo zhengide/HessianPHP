@@ -1,0 +1,16 @@
+{
+    "name": "zhengide/hessianphp",
+    "type": "library",
+    "description": "Hessian PHP Library",
+    "authors": [
+        {
+            "name": "Manuel Gómez"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0"
+    },
+    "autoload": {
+        "classmap": ["src/"]
+    }
+}
