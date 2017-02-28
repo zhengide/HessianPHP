@@ -58,7 +58,7 @@ class Hessian2Parser{
 	
 	function parse($code = null, $expect = false){
 		$end = true;
-		if(!$code)
+		if(!isset($code))
 			$code = $this->read();
 		do {
 			$rule = $this->resolver->resolveSymbol($code, $expect);
