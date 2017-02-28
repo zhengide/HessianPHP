@@ -83,10 +83,10 @@ class Hessian2Writer{
 			return $this->writeReference($refindex);
 		}
 				
-		/* ::= x57 value* 'Z'        # variable-length untyped list
-     	::= x58 int value*        # fixed-length untyped list
-        ::= [x78-7f] value*       # fixed-length untyped list
-     	*/
+		/* ::= x57 value* 'Z'		# variable-length untyped list
+		::= x58 int value*		# fixed-length untyped list
+		::= [x78-7f] value*	   # fixed-length untyped list
+		*/
 				
 		$total = count($array);		
 		if(HessianUtils::isListFormula($array)){
@@ -114,7 +114,7 @@ class Hessian2Writer{
 		
 		/*
 		::= 'M' type (value value)* 'Z'  # key, value map pairs
-	   ::= 'H' (value value)* 'Z'       # untyped key, value 
+		::= 'H' (value value)* 'Z'	   # untyped key, value 
 		 */
 		
 		$refindex = $this->refmap->getReference($map);
@@ -269,19 +269,32 @@ class Hessian2Writer{
 	
 	function writeString($value){
 		$len = HessianUtils::stringLength($value);
+		$total = $len;
+		$offset = 0;
+		$stream = '';
+		while ($len > 0x8000) {
+			$subLen = 0x8000;
+			$tag = 'R';
+			$stream .= $tag . Pack('n', $subLen);
+			// TODO : only UTF-8
+			$data = mb_substr($value, $offset, $subLen,"UTF-8");
+			$stream .= $this->writeStringData($data);
+			$len -= $subLen;
+			$offset += $subLen;
+		}
+		if($total > 0x8000){
+			$value = mb_substr($value, $offset, $total-$offset,"UTF-8");
+		}
 		if($len < 32){
-			return pack('C', $len) 
-				. $this->writeStringData($value);
-		} else 
+			return $stream .pack('C', $len). $this->writeStringData($value);
+		} else
 		if($len < 1024){
 			$b0 = 0x30 + ($len >> 8);
-			$stream = pack('C', $b0);
+			$stream .= pack('C', $b0);
 			$stream .= pack('C', $len);
 			return $stream . $this->writeStringData($value);
 		} else {
 			// TODO :chunks
-			$total = $len;
-			$stream = '';
 			$tag = 'S';
 			$stream .= $tag . pack('n', $len);
 			$stream .= $this->writeStringData($value);
@@ -307,7 +320,7 @@ class Hessian2Writer{
 		return HessianUtils::writeUTF8($string);
 	}
 	
-	function writeDouble($value) {
+	function writeDouble($value){
 		$frac = abs($value) - floor(abs($value));
 		if($value == 0)
 			return pack('c', 0x5b);
@@ -326,14 +339,14 @@ class Hessian2Writer{
 		}
 		// TODO double 4 el del 0.001, revisar
 		$mills = (int) ($value * 1000);
-	    if (0.001 * $mills == $value) {
-	    	$stream = pack('c', 0x5f);
-	      	$stream .= pack('c', $mills >> 24);
-	      	$stream .= pack('c', $mills >> 16);
-	      	$stream .= pack('c', $mills >> 8);
-	      	$stream .= pack('c', $mills);
+		if (0.001 * $mills == $value) {
+			$stream = pack('c', 0x5f);
+		  	$stream .= pack('c', $mills >> 24);
+		  	$stream .= pack('c', $mills >> 16);
+		  	$stream .= pack('c', $mills >> 8);
+		  	$stream .= pack('c', $mills);
 			return $stream;
-	    }
+		}
 		// 64 bit double
 		$stream = 'D';
 		$stream .= HessianUtils::doubleBytes($value);
