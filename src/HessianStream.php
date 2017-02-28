@@ -17,6 +17,7 @@ class HessianStream{
 	public $pos = 0;
 	public $len;
 	public $bytes = array();
+	public $str = '';
 	
 	function __construct($data = null, $length = null){
 		if($data)
@@ -24,8 +25,9 @@ class HessianStream{
 	}
 	
 	function setStream($data, $length = null){
-		$this->bytes = str_split($data);
-		$this->len = count($this->bytes);
+		//$this->bytes = str_split($data);
+		$this->str = $data;
+		$this->len = strlen($this->str);
 		$this->pos = 0;
 	}
 	
@@ -33,40 +35,41 @@ class HessianStream{
 		if($pos == null)
 			$pos = $this->pos;
 		
-		$portion = array_slice($this->bytes, $pos, $count);
-		return implode($portion);
+		$portion = substr($this->str, $pos, $count);
+		return $portion;
 	}
 
 	public function read($count=1){
 		if($count == 0)
 			return;
-		$portion = array_slice($this->bytes, $this->pos, $count);
-		$read = count($portion);
-		$this->pos += $read;
+		
+		$portion = substr($this->str, $this->pos, $count);
+		$read = strlen($portion);
+		$this->pos += $count;
 		if($read < $count) {
 			if($this->pos == 0)
 				throw new Exception('Empty stream received!');
 			else
 				throw new Exception('read past end of stream: '.$this->pos);
 		}
-		return implode($portion);
+		return $portion;
 	}
 	
 	public function readAll(){
 		$this->pos = $this->len;
-		return implode($this->bytes);		
+		return $this->str;		
 	}
 
 	public function write($data){
-		$bytes = str_split($data);
-		$this->len += count($bytes);
-		$this->bytes = array_merge($this->bytes, $bytes);
+		$bytes = $data;
+		$this->len += strlen($bytes);
+		$this->str = $this->str . $bytes;
 	}
  
 	public function flush(){}
 	
 	public function getData(){
-		return implode($this->bytes);
+		return $this->str;
 	}
 	
 	public function close(){		
