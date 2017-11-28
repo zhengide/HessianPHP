@@ -160,6 +160,9 @@ class Hessian2Parser{
 				($data[2] << 16) +
 				($data[3] << 8) +
 				$data[4];
+		if($num > 0x7fffffff){
+			$num -= 0x100000000;
+		}
 		$ts = $num * 60;
 		return $ts;
 	}
