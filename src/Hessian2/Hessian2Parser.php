@@ -252,6 +252,9 @@ class Hessian2Parser{
 	// --- string
 	
 	function string0($code, $num){
+		if( $num == 0 ) {
+			return '';
+		}
 		return $this->readUTF8Bytes($num);
 	}
 	
